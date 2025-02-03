@@ -3,6 +3,7 @@ package segment
 import (
 	"context"
 	"fmt"
+	"github.com/databricks/cli/bundle/config/variable"
 	"path"
 	"regexp"
 	"strconv"
@@ -40,22 +41,37 @@ func (m *resolveAutoBuildNumber) Name() string {
 
 func (m *resolveAutoBuildNumber) Apply(ctx context.Context, b *bundle.Bundle) diag.Diagnostics {
 
-	if b.Config.Variables["build_number"].Value != "auto" && b.Config.Variables["build_branch"].Value != "auto" {
+	if !isAuto(b.Config.Variables["build_branch"]) && !isAuto(b.Config.Variables["build_number"]) && !isAuto(b.Config.Variables["build_sha"]) {
 		return nil
 	}
 
-	var autoBranch = b.Config.Bundle.Git.ActualBranch
-	autoBuildNumber, err := m.getLatestBuild(autoBranch)
-	if err != nil {
-		return diag.FromErr(err)
+	var resolvedBranch = b.Config.Variables["build_branch"].Value
+	if isAuto(b.Config.Variables["build_branch"]) {
+		resolvedBranch = b.Config.Bundle.Git.ActualBranch
+		fmt.Printf("Build branch set to 'auto', using: %s\n", resolvedBranch)
 	}
 
-	autoGitSha, err := m.getBuildSha(autoBranch, autoBuildNumber, "profiles-"+b.Config.Bundle.Name)
-	if err != nil {
-		return diag.FromErr(err)
+	var resolvedBuildNumber = b.Config.Variables["build_number"].Value
+	if isAuto(b.Config.Variables["build_number"]) {
+		var err error
+		resolvedBuildNumber, err = m.getLatestBuild(resolvedBranch.(string))
+		if err != nil {
+			return diag.FromErr(err)
+		}
+		fmt.Printf("Build number set to 'auto', using: %s\n", resolvedBuildNumber)
 	}
 
-	err = b.Config.Mutate(func(v dyn.Value) (dyn.Value, error) {
+	var resolvedGitSha = b.Config.Variables["build_sha"].Value
+	if isAuto(b.Config.Variables["build_sha"]) {
+		var err error
+		resolvedGitSha, err = m.getBuildSha(resolvedBranch.(string), resolvedBuildNumber.(string), "profiles-"+b.Config.Bundle.Name)
+		if err != nil {
+			return diag.FromErr(err)
+		}
+		fmt.Printf("Build SHA set to 'auto', using: %s\n", resolvedGitSha)
+	}
+
+	err := b.Config.Mutate(func(v dyn.Value) (dyn.Value, error) {
 		return dyn.Map(v, "variables", dyn.Foreach(func(p dyn.Path, variable dyn.Value) (dyn.Value, error) {
 			name := p[1].Key()
 			v, ok := b.Config.Variables[name]
@@ -63,16 +79,16 @@ func (m *resolveAutoBuildNumber) Apply(ctx context.Context, b *bundle.Bundle) di
 				return dyn.InvalidValue, fmt.Errorf(`variable "%s" is not defined`, name)
 			}
 
-			if name == "build_branch" && v.Value == "auto" {
-				return dyn.Set(variable, "value", dyn.V(autoBranch))
+			if name == "build_branch" && isAuto(v) {
+				return dyn.Set(variable, "value", dyn.V(resolvedBranch))
 			}
 
-			if name == "build_number" && (v.Value == "auto" || (v.Value == nil && v.Default == "auto")) {
-				return dyn.Set(variable, "value", dyn.V(autoBuildNumber))
+			if name == "build_number" && isAuto(v) {
+				return dyn.Set(variable, "value", dyn.V(resolvedBuildNumber))
 			}
 
-			if name == "build_sha" && (v.Value == "auto" || (v.Value == nil && v.Default == nil)) {
-				return dyn.Set(variable, "value", dyn.V(autoGitSha))
+			if name == "build_sha" && isAuto(v) {
+				return dyn.Set(variable, "value", dyn.V(resolvedGitSha))
 			}
 
 			return variable, nil
@@ -80,9 +96,21 @@ func (m *resolveAutoBuildNumber) Apply(ctx context.Context, b *bundle.Bundle) di
 		}))
 	})
 
-	fmt.Printf("Build tag set to 'auto', using branch (%s) and build (%s)\n", autoBranch, autoBuildNumber)
+	fmt.Printf("Build tag set to 'auto', using branch (%s) and build (%s)\n", resolvedBranch, resolvedBuildNumber)
 
 	return diag.FromErr(err)
+}
+
+func isAuto(v *variable.Variable) bool {
+	if v.HasValue() {
+		return v.Value == "auto"
+	}
+
+	if v.HasDefault() {
+		return v.Default == "auto"
+	}
+
+	return false
 }
 
 func (m *resolveAutoBuildNumber) getLatestBuild(branch string) (string, error) {
@@ -145,6 +173,10 @@ func (m *resolveAutoBuildNumber) getBuildSha(branch string, buildNumber string, 
 
 	if err != nil {
 		return "", err
+	}
+
+	if latestArtifact == "" {
+		return "", fmt.Errorf("no S3 artifact found for build %s-%s; build may not have completed yet", buildNumber, branch)
 	}
 
 	_, err = m.s3Client.HeadObject(&s3.HeadObjectInput{
