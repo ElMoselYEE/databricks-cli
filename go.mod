@@ -1,4 +1,6 @@
-module github.com/databricks/cli
+module github.com/ElMoselYEE/databricks-cli
+
+replace github.com/databricks/cli => .
 
 go 1.23
 
