@@ -56,17 +56,6 @@ func ApprovalForDeploy(ctx context.Context, b *bundle.Bundle) (bool, error) {
 		return false, err
 	}
 
-	noteworthyActions := []terraformlib.ActionType{
-		terraformlib.ActionTypeDelete,
-		terraformlib.ActionTypeRecreate,
-		terraformlib.ActionTypeCreate,
-		terraformlib.ActionTypeUpdate,
-	}
-
-	if b.Config.Experimental.Segment.ConfirmAllChanges {
-		noteworthyActions = append(noteworthyActions, []terraformlib.ActionType{}...)
-	}
-
 	jobActions := filterChangeActions(plan.ResourceChanges, "databricks_job")
 
 	// We don't need to display any prompts in this case.

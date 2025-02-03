@@ -38,9 +38,8 @@ type Experimental struct {
 }
 
 type Segment struct {
-	SlackToken        string `json:"slack_token,omitempty"`
-	ConfirmAllChanges bool   `json:"confirm_all_changes,omitempty"`
-	DetailedPlanView  bool   `json:"detailed_plan_view,omitempty"`
+	SlackToken       string `json:"slack_token,omitempty"`
+	DetailedPlanView bool   `json:"detailed_plan_view,omitempty"`
 }
 
 type Python struct {
