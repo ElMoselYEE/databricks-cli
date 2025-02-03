@@ -1,4 +1,4 @@
-module github.com/ElMoselYEE/databricks-cli
+module github.com/databricks/cli
 
 go 1.23
 
@@ -37,7 +37,6 @@ require (
 
 require (
 	github.com/aws/aws-sdk-go v1.55.6
-	github.com/databricks/cli v0.240.0
 	github.com/slack-go/slack v0.15.0
 )
 
