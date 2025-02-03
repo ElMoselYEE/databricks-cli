@@ -37,6 +37,7 @@ require (
 
 require (
 	github.com/aws/aws-sdk-go v1.55.6
+	github.com/databricks/cli v0.240.0
 	github.com/slack-go/slack v0.15.0
 )
 

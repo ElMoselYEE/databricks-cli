@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 
+	"github.com/ElMoselYEE/databricks-cli/bundle/segment"
 	"github.com/databricks/cli/bundle"
 	"github.com/databricks/cli/bundle/apps"
 	"github.com/databricks/cli/bundle/artifacts"
@@ -17,7 +18,6 @@ import (
 	"github.com/databricks/cli/bundle/libraries"
 	"github.com/databricks/cli/bundle/permissions"
 	"github.com/databricks/cli/bundle/scripts"
-	"github.com/databricks/cli/bundle/segment"
 	"github.com/databricks/cli/bundle/trampoline"
 	"github.com/databricks/cli/libs/cmdio"
 	"github.com/databricks/cli/libs/sync"

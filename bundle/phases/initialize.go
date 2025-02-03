@@ -1,6 +1,7 @@
 package phases
 
 import (
+	"github.com/ElMoselYEE/databricks-cli/bundle/segment"
 	"github.com/databricks/cli/bundle"
 	"github.com/databricks/cli/bundle/apps"
 	"github.com/databricks/cli/bundle/config"
@@ -11,7 +12,6 @@ import (
 	"github.com/databricks/cli/bundle/deploy/terraform"
 	"github.com/databricks/cli/bundle/permissions"
 	"github.com/databricks/cli/bundle/scripts"
-	"github.com/databricks/cli/bundle/segment"
 	"github.com/databricks/cli/bundle/trampoline"
 )
 
