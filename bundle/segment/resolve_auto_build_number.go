@@ -64,17 +64,14 @@ func (m *resolveAutoBuildNumber) Apply(ctx context.Context, b *bundle.Bundle) di
 			}
 
 			if name == "build_branch" && v.Value == "auto" {
-				fmt.Printf("automatically resolved: variables.build_branch.value=%s\n", autoBranch)
 				return dyn.Set(variable, "value", dyn.V(autoBranch))
 			}
 
 			if name == "build_number" && (v.Value == "auto" || (v.Value == nil && v.Default == "auto")) {
-				fmt.Printf("automatically resolved: variables.build_number.value=%s\n", autoBuildNumber)
 				return dyn.Set(variable, "value", dyn.V(autoBuildNumber))
 			}
 
 			if name == "build_sha" && (v.Value == "auto" || (v.Value == nil && v.Default == nil)) {
-				fmt.Printf("automatically resolved: variables.build_sha.value=%s\n", autoGitSha)
 				return dyn.Set(variable, "value", dyn.V(autoGitSha))
 			}
 
@@ -82,6 +79,8 @@ func (m *resolveAutoBuildNumber) Apply(ctx context.Context, b *bundle.Bundle) di
 
 		}))
 	})
+
+	fmt.Printf("Build tag set to 'auto', using branch (%s) and build (%s)\n", autoBranch, autoBuildNumber)
 
 	return diag.FromErr(err)
 }
