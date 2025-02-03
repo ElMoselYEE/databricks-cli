@@ -23,6 +23,9 @@ var (
 	gitShaRegexp    = regexp.MustCompile(`^.*?-([a-z0-9]+)\.jar$`)
 )
 
+const artifactSourceS3 = "s3"
+const artifactSourceLocal = "local"
+
 type resolveAutoBuildNumber struct {
 	s3Client *s3.S3
 }
@@ -41,34 +44,57 @@ func (m *resolveAutoBuildNumber) Name() string {
 
 func (m *resolveAutoBuildNumber) Apply(ctx context.Context, b *bundle.Bundle) diag.Diagnostics {
 
-	if !isAuto(b.Config.Variables["build_branch"]) && !isAuto(b.Config.Variables["build_number"]) && !isAuto(b.Config.Variables["build_sha"]) {
+	if !isEqual(b.Config.Variables["build_branch"], "auto") && !isEqual(b.Config.Variables["build_number"], "auto") && !isEqual(b.Config.Variables["build_sha"], "auto") {
 		return nil
 	}
 
 	var resolvedBranch = b.Config.Variables["build_branch"].Value
-	if isAuto(b.Config.Variables["build_branch"]) {
+	if isEqual(b.Config.Variables["build_branch"], "auto") {
 		resolvedBranch = b.Config.Bundle.Git.ActualBranch
 		fmt.Printf("Build branch set to 'auto', using: %s\n", resolvedBranch)
 	}
 
 	var resolvedBuildNumber = b.Config.Variables["build_number"].Value
-	if isAuto(b.Config.Variables["build_number"]) {
-		var err error
-		resolvedBuildNumber, err = m.getLatestBuild(resolvedBranch.(string))
-		if err != nil {
-			return diag.FromErr(err)
+	if isEqual(b.Config.Variables["build_number"], "auto") {
+		if isEqual(b.Config.Variables["artifact_source"], artifactSourceS3) {
+			var err error
+			resolvedBuildNumber, err = m.getLatestBuild(resolvedBranch.(string))
+			if err != nil {
+				return diag.FromErr(err)
+			}
+			fmt.Printf("Build number set to 'auto', using: %s\n", resolvedBuildNumber)
+		} else if isEqual(b.Config.Variables["artifact_source"], artifactSourceLocal) {
+			resolvedBuildNumber = "local"
 		}
-		fmt.Printf("Build number set to 'auto', using: %s\n", resolvedBuildNumber)
 	}
 
 	var resolvedGitSha = b.Config.Variables["build_sha"].Value
-	if isAuto(b.Config.Variables["build_sha"]) {
+	if isEqual(b.Config.Variables["build_sha"], "auto") && isEqual(b.Config.Variables["artifact_source"], "s3") {
 		var err error
 		resolvedGitSha, err = m.getBuildSha(resolvedBranch.(string), resolvedBuildNumber.(string), "profiles-"+b.Config.Bundle.Name)
 		if err != nil {
 			return diag.FromErr(err)
 		}
 		fmt.Printf("Build SHA set to 'auto', using: %s\n", resolvedGitSha)
+	}
+
+	var resolvedArtifactPath = b.Config.Variables["artifact_path"].Value
+	if isEqual(b.Config.Variables["artifact_path"], "auto") {
+		if isEqual(b.Config.Variables["artifact_source"], artifactSourceS3) {
+			resolvedArtifactPath = fmt.Sprintf(
+				"s3://%s/profiles-data-lake-spark/${var.build_branch}/${var.build_number}/%s/build/libs/profiles-%s-0.3.0-%s.jar",
+				artifactsBucket, b.Config.Bundle.Name, b.Config.Bundle.Name, resolvedGitSha,
+			)
+		} else if isEqual(b.Config.Variables["artifact_source"], artifactSourceLocal) {
+			resolvedArtifactPath = fmt.Sprintf("%s/files/build/libs/%s-0.3.0.jar", b.Config.Workspace.RootPath, b.Config.Bundle.Name)
+		} else {
+			return diag.Errorf(
+				"unsupported artifact source: %s, allowed values: [%s, %s]",
+				b.Config.Variables["artifact_source"].Value, artifactSourceS3, artifactSourceLocal,
+			)
+		}
+
+		fmt.Printf("Artifact path set to 'auto', using: %s\n", resolvedArtifactPath)
 	}
 
 	err := b.Config.Mutate(func(v dyn.Value) (dyn.Value, error) {
@@ -79,16 +105,20 @@ func (m *resolveAutoBuildNumber) Apply(ctx context.Context, b *bundle.Bundle) di
 				return dyn.InvalidValue, fmt.Errorf(`variable "%s" is not defined`, name)
 			}
 
-			if name == "build_branch" && isAuto(v) {
+			if name == "build_branch" && isEqual(v, "auto") {
 				return dyn.Set(variable, "value", dyn.V(resolvedBranch))
 			}
 
-			if name == "build_number" && isAuto(v) {
+			if name == "build_number" && isEqual(v, "auto") {
 				return dyn.Set(variable, "value", dyn.V(resolvedBuildNumber))
 			}
 
-			if name == "build_sha" && isAuto(v) {
+			if name == "build_sha" && isEqual(v, "auto") {
 				return dyn.Set(variable, "value", dyn.V(resolvedGitSha))
+			}
+
+			if name == "artifact_path" && isEqual(v, "auto") {
+				return dyn.Set(variable, "value", dyn.V(resolvedArtifactPath))
 			}
 
 			return variable, nil
@@ -99,13 +129,13 @@ func (m *resolveAutoBuildNumber) Apply(ctx context.Context, b *bundle.Bundle) di
 	return diag.FromErr(err)
 }
 
-func isAuto(v *variable.Variable) bool {
+func isEqual(v *variable.Variable, value string) bool {
 	if v.HasValue() {
-		return v.Value == "auto"
+		return v.Value == value
 	}
 
 	if v.HasDefault() {
-		return v.Default == "auto"
+		return v.Default == value
 	}
 
 	return false
