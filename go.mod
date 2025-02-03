@@ -1,4 +1,4 @@
-module github.com/databricks/cli
+module github.com/ElMoselYEE/databricks-cli
 
 go 1.23
 
