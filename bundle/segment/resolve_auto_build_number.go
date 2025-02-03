@@ -96,8 +96,6 @@ func (m *resolveAutoBuildNumber) Apply(ctx context.Context, b *bundle.Bundle) di
 		}))
 	})
 
-	fmt.Printf("Build tag set to 'auto', using branch (%s) and build (%s)\n", resolvedBranch, resolvedBuildNumber)
-
 	return diag.FromErr(err)
 }
 
