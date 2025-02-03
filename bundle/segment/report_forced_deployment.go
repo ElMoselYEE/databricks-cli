@@ -53,15 +53,29 @@ func (m *reportForcedDeplyoment) Apply(ctx context.Context, b *bundle.Bundle) di
 	}
 
 	var message = fmt.Sprintf(
-		"Test: %s is deploying bundle %s from branch %s to %s using --force. Justification: %s",
+		"%s is deploying bundle %s from branch %s to %s using --force. Justification: %s",
 		GetSlackUserFromEnv(), b.Config.Bundle.Name, b.Config.Bundle.Git.ActualBranch, b.Config.Bundle.Target, reason,
 	)
+
+	blocks := []slack.Block{
+		slack.NewSectionBlock(
+			slack.NewTextBlockObject(
+				slack.MarkdownType,
+				message,
+				false,
+				false,
+			),
+			nil,
+			nil,
+		),
+	}
 
 	slackClient := slack.New(b.Config.Experimental.Segment.SlackToken)
 
 	_, _, _, err = slackClient.SendMessage(
 		"#eng-profiles-data-lake-deploys",
-		slack.MsgOptionText(fmt.Sprintf("This is a test: %s", message), false),
+		slack.MsgOptionText(message, false),
+		slack.MsgOptionBlocks(blocks...),
 	)
 	if err != nil {
 		return diag.Errorf("failed to send slack message: %w", err)
