@@ -18,6 +18,7 @@ func New() *cobra.Command {
 	cmd.AddCommand(newDestroyCommand())
 	cmd.AddCommand(newLaunchCommand())
 	cmd.AddCommand(newRunCommand())
+	cmd.AddCommand(newResize())
 	cmd.AddCommand(newSchemaCommand())
 	cmd.AddCommand(newSyncCommand())
 	cmd.AddCommand(newTestCommand())

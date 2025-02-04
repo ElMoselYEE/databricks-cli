@@ -49,9 +49,9 @@ func (m *resolveAutoBuildNumber) Apply(ctx context.Context, b *bundle.Bundle) di
 	}
 
 	var resolvedBranch = b.Config.Variables["build_branch"].Value
-	if isEqual(b.Config.Variables["build_branch"], "auto") {
+	if isEqual(b.Config.Variables["build_branch"], "auto") || b.Config.Variables["build_branch"].Value == nil {
 		resolvedBranch = b.Config.Bundle.Git.ActualBranch
-		fmt.Printf("Build branch set to 'auto', using: %s\n", resolvedBranch)
+		fmt.Printf("Build branch not set or set to 'auto', using: %s\n", resolvedBranch)
 	}
 
 	var resolvedBuildNumber = b.Config.Variables["build_number"].Value
