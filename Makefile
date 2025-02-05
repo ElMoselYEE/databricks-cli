@@ -38,6 +38,7 @@ acc-showcover:
 
 build: vendor
 	go build -mod vendor
+	cp cli ${GOPATH}/bin/segment-dbx
 
 snapshot:
 	go build -o .databricks/databricks

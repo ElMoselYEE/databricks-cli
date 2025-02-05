@@ -1198,6 +1198,9 @@
                       "description": "The commands to run.",
                       "$ref": "#/$defs/map/github.com/databricks/cli/bundle/config.Command"
                     },
+                    "segment": {
+                      "$ref": "#/$defs/github.com/databricks/cli/bundle/config.Segment"
+                    },
                     "use_legacy_run_as": {
                       "description": "Whether to use the legacy run_as behavior.",
                       "$ref": "#/$defs/bool"
@@ -1416,6 +1419,26 @@
                       "description": "The volume definitions for the bundle, where each key is the name of the volume.",
                       "$ref": "#/$defs/map/github.com/databricks/cli/bundle/config/resources.Volume",
                       "markdownDescription": "The volume definitions for the bundle, where each key is the name of the volume. See [volumes](https://docs.databricks.com/dev-tools/bundles/resources.html#volumes)"
+                    }
+                  },
+                  "additionalProperties": false
+                },
+                {
+                  "type": "string",
+                  "pattern": "\\$\\{(var(\\.[a-zA-Z]+([-_]?[a-zA-Z0-9]+)*(\\[[0-9]+\\])*)+)\\}"
+                }
+              ]
+            },
+            "config.Segment": {
+              "oneOf": [
+                {
+                  "type": "object",
+                  "properties": {
+                    "detailed_plan_view": {
+                      "$ref": "#/$defs/bool"
+                    },
+                    "slack_token": {
+                      "$ref": "#/$defs/string"
                     }
                   },
                   "additionalProperties": false

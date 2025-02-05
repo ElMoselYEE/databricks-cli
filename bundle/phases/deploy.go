@@ -17,6 +17,7 @@ import (
 	"github.com/databricks/cli/bundle/libraries"
 	"github.com/databricks/cli/bundle/permissions"
 	"github.com/databricks/cli/bundle/scripts"
+	"github.com/databricks/cli/bundle/segment"
 	"github.com/databricks/cli/bundle/trampoline"
 	"github.com/databricks/cli/libs/cmdio"
 	"github.com/databricks/cli/libs/sync"
@@ -140,6 +141,8 @@ func Deploy(outputHandler sync.OutputHandler) bundle.Mutator {
 			apps.UploadConfig(),
 			metadata.Compute(),
 			metadata.Upload(),
+			segment.RestartStreams(),
+			segment.ReportDeployment(),
 			bundle.LogString("Deployment complete!"),
 		),
 	)
@@ -153,6 +156,7 @@ func Deploy(outputHandler sync.OutputHandler) bundle.Mutator {
 				terraform.CheckDashboardsModifiedRemotely(),
 				deploy.StatePull(),
 				mutator.ValidateGitDetails(),
+				segment.ReportForcedDeployment(),
 				artifacts.CleanUp(),
 				libraries.ExpandGlobReferences(),
 				libraries.Upload(),
@@ -166,7 +170,7 @@ func Deploy(outputHandler sync.OutputHandler) bundle.Mutator {
 				terraform.CheckRunningResource(),
 				terraform.Plan(terraform.PlanGoal("deploy")),
 				bundle.If(
-					approvalForDeploy,
+					segment.ApprovalForDeploy,
 					deployCore,
 					bundle.LogString("Deployment cancelled!"),
 				),

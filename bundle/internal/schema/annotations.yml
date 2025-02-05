@@ -70,6 +70,9 @@ github.com/databricks/cli/bundle/config.Experimental:
   "scripts":
     "description": |-
       The commands to run.
+  "segment":
+    "description": |-
+      PLACEHOLDER
   "use_legacy_run_as":
     "description": |-
       Whether to use the legacy run_as behavior.
@@ -283,6 +286,13 @@ github.com/databricks/cli/bundle/config.Root:
       Defines the Databricks workspace for the bundle.
     "markdown_description": |-
       Defines the Databricks workspace for the bundle. See [_](/dev-tools/bundles/settings.md#workspace).
+github.com/databricks/cli/bundle/config.Segment:
+  "detailed_plan_view":
+    "description": |-
+      PLACEHOLDER
+  "slack_token":
+    "description": |-
+      PLACEHOLDER
 github.com/databricks/cli/bundle/config.Sync:
   "exclude":
     "description": |-
