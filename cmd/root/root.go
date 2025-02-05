@@ -17,8 +17,8 @@ import (
 
 func New(ctx context.Context) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:     "databricks",
-		Short:   "Databricks CLI",
+		Use:     "segment-dbx",
+		Short:   "Segment Databricks CLI",
 		Version: build.GetInfo().Version,
 
 		// Cobra prints the usage string to stderr if a command returns an error.
@@ -85,7 +85,7 @@ func New(ctx context.Context) *cobra.Command {
 	}
 
 	cmd.SetFlagErrorFunc(flagErrorFunc)
-	cmd.SetVersionTemplate("Databricks CLI v{{.Version}}\n")
+	cmd.SetVersionTemplate("Segment Databricks CLI v{{.Version}}\n")
 	return cmd
 }
 

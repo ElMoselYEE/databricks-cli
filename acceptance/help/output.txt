@@ -1,7 +1,7 @@
-Databricks CLI
+Segment Databricks CLI
 
 Usage:
-  databricks [command]
+  segment-dbx [command]
 
 Databricks Workspace
   fs                                     Filesystem related commands

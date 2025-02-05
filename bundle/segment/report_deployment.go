@@ -80,7 +80,5 @@ func (m *reportDeplyoment) Apply(ctx context.Context, b *bundle.Bundle) diag.Dia
 		return diag.Errorf("failed to send slack message: %w", err)
 	}
 
-	fmt.Printf("Thank you for your input. Proceeding with deployment.\n\n")
-
 	return nil
 }

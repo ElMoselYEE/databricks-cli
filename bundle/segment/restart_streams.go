@@ -2,6 +2,7 @@ package segment
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"strconv"
@@ -54,6 +55,9 @@ func (m *restartStreams) Apply(ctx context.Context, b *bundle.Bundle) diag.Diagn
 
 		jobId, err := strconv.ParseInt(jobIdString.(string), 10, 64)
 		if err != nil {
+			bytes, _ := json.Marshal(change.Change.After)
+			fmt.Println("debug: ")
+			fmt.Println(string(bytes))
 			return diag.Errorf("failed to parse job_id while restarting jobs: %s", jobIdString)
 		}
 
